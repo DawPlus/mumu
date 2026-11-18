@@ -39,3 +39,8 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Local editor settings and environment files
+.claude/
+.env
+.env.*

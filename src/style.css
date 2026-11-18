@@ -1,0 +1,654 @@
+@import url("https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap");
+:root {
+  font-family: "Noto Sans KR", sans-serif;
+  color: #35483d;
+  background: #f6f4e9;
+  font-synthesis: none;
+  font-weight: 500;
+  --green: #365b45;
+  --paper: #fffdf3;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: 0;
+  background: none;
+  touch-action: manipulation;
+}
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid #d8894d;
+  outline-offset: 4px;
+}
+button:disabled {
+  cursor: wait;
+}
+button svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+[hidden] {
+  display: none !important;
+}
+.game-shell {
+  width: min(100% - 48px, 660px);
+  margin: 0 auto;
+  padding: 24px 0 18px;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 25px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: inherit;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+}
+.mark {
+  width: 38px;
+  height: 32px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.toolbar {
+  display: flex;
+  gap: 8px;
+}
+.icon-btn {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #e8eadc;
+}
+.icon-btn:hover {
+  background: #dde3d0;
+}
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+.title-row h1 {
+  font-family: "Gaegu", "Apple SD Gothic Neo", sans-serif;
+  font-size: 44px;
+  letter-spacing: -2px;
+  margin: 0 0 3px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.title-row p {
+  font-size: 12px;
+  color: #6a7868;
+  margin: 0;
+}
+.edition {
+  font-family: "Gaegu", sans-serif;
+  font-size: 18px;
+  transform: rotate(-5deg);
+  color: #71816b;
+}
+.game-board {
+  position: relative;
+  border: 2px solid #4e6450;
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--paper);
+}
+.board-top {
+  height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 19px;
+  gap: 8px;
+  background: #fffdf3;
+}
+
+.mode-switch {
+  display: flex;
+  background: #e9ecdf;
+  padding: 4px;
+  border-radius: 11px;
+}
+.mode-switch button {
+  border-radius: 8px;
+  padding: 7px 13px;
+  font-size: 12px;
+  font-weight: 800;
+  min-height: 32px;
+}
+.mode-switch .active {
+  background: #3e604a;
+  color: #fffdf1;
+}
+.scene {
+  position: relative;
+  height: 410px;
+  touch-action: none;
+  user-select: none;
+  cursor: pointer;
+  overflow: hidden;
+  background: #e8eddc;
+}
+.view {
+  position: absolute;
+  inset: 0;
+}
+.view canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.scene-note {
+  position: absolute;
+  top: 19px;
+  left: 20px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+  color: #61765d;
+}
+.live-dot {
+  width: 5px;
+  height: 5px;
+  background: #6a9060;
+  border-radius: 50%;
+}
+.scene-bottom {
+  position: absolute;
+  bottom: 13px;
+  left: 20px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.scene-bottom .icon-btn {
+  pointer-events: auto;
+  background: #f6f6e9;
+}
+.zone-label {
+  font-family: "Gaegu", sans-serif;
+  font-size: 20px;
+  color: #647d5d;
+  transform: rotate(-4deg);
+}
+.bubble {
+  position: absolute;
+  left: 50%;
+  top: 24%;
+  transform: translateX(-50%) rotate(-5deg);
+  font-family: "Gaegu", sans-serif;
+  font-weight: 700;
+  font-size: 30px;
+  color: #a9503c;
+  background: #fff9e6;
+  padding: 4px 12px;
+  border-radius: 12px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.key-hint {
+  margin-left: 8px;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  opacity: 0.55;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  padding: 3px 5px;
+}
+
+footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 3px 0;
+  color: #7b8875;
+  font-size: 11px;
+}
+footer > span {
+  font-family: "Gaegu", sans-serif;
+  font-size: 17px;
+}
+.text-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  min-height: 32px;
+}
+.text-button svg {
+  width: 14px;
+  height: 14px;
+}
+.overlay {
+  position: absolute;
+  inset: 62px 0 0;
+  background: #e8eddcaa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 5;
+}
+.dialog {
+  background: #fffdf3;
+  border: 2px solid #4e6450;
+  border-radius: 24px;
+  padding: 26px 28px;
+  text-align: center;
+  width: min(100%, 354px);
+  max-height: 100%;
+  overflow: auto;
+  box-shadow: 0 9px 0 #4e645019;
+}
+.dialog-turtle {
+  font-size: 53px;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+.dialog-kicker {
+  font-size: 10px !important;
+  color: #809073 !important;
+  margin-bottom: 5px !important;
+}
+.dialog h2 {
+  font-family: "Gaegu", sans-serif;
+  font-size: 35px;
+  letter-spacing: -1px;
+  margin: 0 0 10px;
+  line-height: 1.05;
+}
+.dialog p {
+  font-size: 12px;
+  line-height: 1.85;
+  color: #77836e;
+  margin: 10px 0 18px;
+}
+.how-to {
+  background: #edf0e1;
+  border-radius: 12px;
+  padding: 10px 15px;
+  text-align: left;
+}
+.how-to div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 0;
+}
+.how-to b {
+  font-family: "Gaegu", sans-serif;
+  font-size: 23px;
+  min-width: 42px;
+}
+.how-to span {
+  font-size: 10px;
+  font-weight: 600;
+}
+.dialog .small-note {
+  font-size: 10px;
+  margin: 12px 0 19px;
+}
+.primary {
+  background: #3e604a;
+  color: #fffdec;
+  min-height: 48px;
+  border-radius: 11px;
+  padding: 12px 18px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 800;
+}
+.primary:hover {
+  background: #294b35;
+}
+.secondary {
+  width: 100%;
+  font-size: 11px;
+  min-height: 42px;
+  margin-top: 7px;
+  color: #718066;
+}
+
+@media (min-width: 1000px) {
+  .game-shell {
+    padding-top: 34px;
+  }
+  .scene {
+    height: 420px;
+  }
+  .title-row h1 {
+    font-size: 48px;
+  }
+  .topbar {
+    margin-bottom: 32px;
+  }
+}
+@media (max-width: 600px) {
+  .game-shell {
+    width: 100%;
+    padding: 14px 12px max(12px, env(safe-area-inset-bottom));
+  }
+  .topbar {
+    margin: 0 5px 17px;
+  }
+  .title-row {
+    margin: 0 7px 18px;
+  }
+  .title-row h1 {
+    font-size: 37px;
+    letter-spacing: -2px;
+  }
+  .title-row p {
+    font-size: 10px;
+  }
+  .edition {
+    font-size: 15px;
+  }
+  .board-top {
+    padding: 0 12px;
+    height: 57px;
+  }
+
+  .mode-switch button {
+    padding: 6px 10px;
+  }
+  .game-board {
+    border-radius: 18px;
+  }
+  .scene {
+    height: clamp(285px, 43dvh, 430px);
+  }
+  .scene-note {
+    left: 14px;
+    top: 15px;
+    font-size: 10px;
+  }
+
+  .key-hint {
+    display: none;
+  }
+
+  .overlay {
+    inset: 57px 0 0;
+    padding: 16px;
+  }
+  .dialog {
+    padding: 22px 22px;
+  }
+  .dialog h2 {
+    font-size: 32px;
+  }
+  .dialog-turtle {
+    font-size: 44px;
+  }
+  footer {
+    padding: 10px 6px 0;
+  }
+  .brand {
+    font-size: 11px;
+  }
+  .icon-btn {
+    width: 35px;
+    height: 35px;
+  }
+}
+@media (max-height: 720px) and (max-width: 600px) {
+  .game-shell {
+    padding-top: 9px;
+  }
+  .topbar {
+    margin-bottom: 10px;
+  }
+  .title-row {
+    margin-bottom: 10px;
+  }
+  .title-row h1 {
+    font-size: 32px;
+  }
+  .scene {
+    height: 270px;
+  }
+  .dialog {
+    padding: 16px 20px;
+  }
+  .dialog-turtle {
+    font-size: 32px;
+    margin-bottom: 6px;
+  }
+  .dialog p {
+    margin: 8px 0 12px;
+  }
+  .how-to {
+    padding: 4px 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
+
+.run-score {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.run-score > strong {
+  font-size: 25px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* The shop replaces the old single-lane brake controls. */
+.timer {
+  display: flex;
+  gap: 3px;
+  align-items: baseline;
+  color: #526c50;
+}
+.timer b {
+  font-size: 25px;
+  font-variant-numeric: tabular-nums;
+}
+.timer span {
+  font-size: 11px;
+}
+.timer.urgent {
+  color: #c06343;
+}
+.scene {
+  height: 470px;
+  cursor: grab;
+}
+.scene:active {
+  cursor: grabbing;
+}
+.bubble {
+  top: 12%;
+  font-size: 25px;
+  max-width: 90%;
+  text-align: center;
+  white-space: normal;
+  z-index: 2;
+}
+.growth-panel {
+  padding: 17px 22px 0;
+}
+.growth-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+.growth-heading > span {
+  font-size: 10px;
+  color: #78856f;
+}
+.growth-track {
+  height: 9px;
+  background: #e6e9db;
+  border-radius: 5px;
+  margin: 10px 0 8px;
+  overflow: hidden;
+}
+#growth-fill {
+  height: 100%;
+  width: 0;
+  background: #8caf75;
+  transition: width 0.15s;
+}
+.unlock-list {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #a1a690;
+}
+.unlock-list span.unlocked {
+  font-weight: 800;
+  color: #436447;
+}
+.drag-tip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 15px 20px 18px;
+  background: #edf0e1;
+  padding: 13px 17px;
+  border-radius: 12px;
+}
+.drag-tip > svg {
+  width: 26px;
+  height: 26px;
+}
+.drag-tip b {
+  font-size: 13px;
+}
+.drag-tip small {
+  display: block;
+  font-size: 9px;
+  margin-top: 4px;
+  color: #75816b;
+}
+.drag-tip .key-hint {
+  margin-left: auto;
+}
+.joystick {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  margin: -40px 0 0 -40px;
+  border: 2px solid #55764b66;
+  border-radius: 50%;
+  background: #fff8dc44;
+  pointer-events: none;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+}
+#stick {
+  width: 34px;
+  height: 34px;
+  background: #52784b99;
+  border: 2px solid #fff9df;
+  border-radius: 50%;
+}
+.result-score {
+  font-size: 48px;
+  font-weight: 900;
+  color: #466a43;
+  margin: 20px 0 10px;
+  font-variant-numeric: tabular-nums;
+}
+.result-score small {
+  font-size: 15px;
+  margin-left: 7px;
+}
+@media (max-width: 600px) {
+  .scene {
+    height: clamp(300px, 48dvh, 460px);
+  }
+  .title-row h1 {
+    font-size: 34px;
+  }
+  .title-row p {
+    font-size: 9px;
+  }
+  .edition {
+    font-size: 13px;
+  }
+  .growth-panel {
+    padding: 13px 16px 0;
+  }
+  .drag-tip {
+    margin: 13px 14px 15px;
+    padding: 12px;
+  }
+  .bubble {
+    font-size: 23px;
+    top: 13%;
+  }
+}
+@media (max-height: 720px) and (max-width: 600px) {
+  .scene {
+    height: 285px;
+  }
+  .title-row h1 {
+    font-size: 29px;
+  }
+  .drag-tip {
+    margin: 10px 13px;
+    padding: 10px;
+  }
+  .growth-panel {
+    padding-top: 10px;
+  }
+  .title-row p {
+    font-size: 8px;
+  }
+  .edition {
+    display: none;
+  }
+}
+.scene:focus-visible {
+  outline: 2px solid #8caf75;
+  outline-offset: -2px;
+}
