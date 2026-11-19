@@ -1,7 +1,7 @@
 import { drawProp, stickersReady } from "./shopProps";
 import { motion } from "./motion";
 import * as THREE from "three";
-import type { Game } from "./game";
+import { isFlying, type Game } from "./game";
 
 export class Runner3D {
   private scene = new THREE.Scene();
@@ -14,6 +14,8 @@ export class Runner3D {
   private torso = new THREE.Group();
   private props = new Map<Game["obstacles"][number], THREE.Mesh>();
   private propMaterials = new Map<string, THREE.MeshBasicMaterial>();
+  private aura = new THREE.Mesh(new THREE.SphereGeometry(1.25,16,12), new THREE.MeshBasicMaterial({color:0xffdf75,transparent:true,opacity:.18,depthWrite:false}));
+  private streaks: THREE.Mesh[] = [];
   private quad = new THREE.PlaneGeometry(1, 1);
   constructor(host: HTMLElement) {
     this.scene.background = new THREE.Color("#e8eddc");
@@ -78,7 +80,16 @@ export class Runner3D {
     cloth.quadraticCurveTo(-.42,.08,-.04,-.13);
     cloth.closePath(); this.scarf.add(new THREE.Mesh(new THREE.ShapeGeometry(cloth),coral));
     this.scarf.position.set(.57,.98,.43); this.torso.add(this.scarf);
+    this.aura.position.y=.8; this.turtle.add(this.aura);
+    this.turtle.scale.setScalar(.5);
     this.scene.add(this.turtle);
+    const streakGeometry=new THREE.BoxGeometry(1,.025,.035);
+    const streakMaterial=new THREE.MeshBasicMaterial({color:0xf5e4b7,transparent:true,opacity:.7});
+    for(let i=0;i<28;i++){
+      const streak=new THREE.Mesh(streakGeometry,streakMaterial);
+      streak.position.set(0,i<18?.015:.6+(i%5)*.45,i<18?1.1+(i%3)*.45:-.8);
+      this.streaks.push(streak);this.scene.add(streak);
+    }
   }
   resize(w: number, h: number) {
     if (!w || !h) return;
@@ -92,6 +103,13 @@ export class Runner3D {
   }
   render(g:Game){
     const m=motion(g.speed,g.distance);
+    this.aura.visible=isFlying(g) || g.turbo>0;
+    for(let i=0;i<this.streaks.length;i++) {
+      const streak=this.streaks[i];streak.position.x=((i*1.9-g.distance/100*(i<18?1:1.4))%28+28)%28-14;
+      streak.scale.x=(g.speed/600)*(g.turbo>0?1.8:.8);
+      streak.visible=i>=18 || !g.obstacles.some(o=>o.type==='hole' && streak.position.x>-2.5+o.x/100 && streak.position.x<-2.5+(o.x+o.width)/100);
+    }
+    this.aura.scale.setScalar(1+Math.sin(g.time*12)*.06);
     this.scarf.rotation.z=Math.sin(m.phase*1.6)*(.1+m.intensity*.15);
     const crawl = (1 - m.upright) * (g.y > 0 ? 0 : 1);
     this.torso.rotation.z=m.upright*.7-m.lean-.13*crawl;
@@ -122,31 +140,37 @@ this.turtle.position.y=g.y/100+(g.y>0?0:Math.abs(Math.sin(m.phase))*.08*m.intens
     }
     for (const item of g.obstacles) {
       const hole = item.type === "hole";
+      const platform = item.type === "platform";
       let mesh = this.props.get(item);
       if (!mesh) {
-        let material = this.propMaterials.get(item.type);
+        const materialKey = `${item.type}:${item.width}`;
+        let material = this.propMaterials.get(materialKey);
         if (!material) {
           const canvas = document.createElement("canvas");
-          canvas.width=192; canvas.height=288;
+          canvas.width=item.width*4; canvas.height=320;
           const ctx=canvas.getContext("2d")!;
-          ctx.scale(4,4); ctx.translate(0,hole?0:66);
-          drawProp(ctx,item.type,hole);
+          ctx.scale(4,4); ctx.translate(0,hole?0:platform?4:72);
+          if(item.type==='cactus') {
+            for(let x=0;x<item.width;x+=42){ctx.save();ctx.translate(x,0);ctx.scale(Math.min(42,item.width-x)/48,1);drawProp(ctx,item.type);ctx.restore();}
+          } else if(hole || platform) drawProp(ctx,item.type,hole,item.width);
+          else {ctx.save();ctx.scale(item.width/48,1);drawProp(ctx,item.type);ctx.restore();}
           const map=new THREE.CanvasTexture(canvas); map.colorSpace=THREE.SRGBColorSpace;
-          if (!hole) void stickersReady.then(ready => {
+          if (item.type === "potato" || item.type === "sweetPotato") void stickersReady.then(ready => {
             if (!ready) return;
-            ctx.clearRect(0,-66,48,72);
+            ctx.clearRect(0,-72,48,80);
             drawProp(ctx,item.type);
             map.needsUpdate=true;
           });
           material=new THREE.MeshBasicMaterial({map,transparent:true,alphaTest:.05,side:THREE.DoubleSide});
-          this.propMaterials.set(item.type,material);
+          this.propMaterials.set(materialKey,material);
         }
         mesh=new THREE.Mesh(this.quad,material);
-        mesh.scale.set(.48,hole?4:.72,1);
+        mesh.scale.set(item.width/100,hole?4:.8,1);
         if(hole) mesh.rotation.x=-Math.PI/2;
         this.scene.add(mesh); this.props.set(item,mesh);
       }
-      mesh.position.set(-2.5+(item.x+item.width/2)/100,hole?.005:.30,.05);
+      mesh.visible=!item.hit;
+      mesh.position.set(-2.5+(item.x+item.width/2)/100,hole?.005:(item.y/100+(platform?-.36:.32)),.05);
     }
     this.renderer.render(this.scene,this.camera);
   }

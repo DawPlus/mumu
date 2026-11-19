@@ -1,130 +1,37 @@
-const node = (id: string) => document.getElementById(id)!;
-const click = (id: string) => node(id).click();
-const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
-function assert(value: unknown, message: string) {
-  if (!value) throw new Error(message);
-}
-async function until(predicate: () => boolean, timeout = 40000) {
-  const start = performance.now();
-  while (!predicate()) {
-    if (performance.now() - start > timeout)
-      throw new Error("Timed out waiting for game");
-    await delay(20);
+const el = (id: string) => document.getElementById(id)!;
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const assert = (ok: unknown, message: string) => { if (!ok) throw new Error(message); };
+const key = (type: string) => el('scene').dispatchEvent(new KeyboardEvent(type, {code:'Space',bubbles:true}));
+export async function checkRunner() {
+  async function height(hold: number) {
+    el('retry').click(); await new Promise(requestAnimationFrame); key('keydown'); let peak=0;
+    for(let t=0;t<800;t+=20){if(t===hold)key('keyup');await wait(20);peak=Math.max(peak,Number(el('scene').dataset.y));}
+    key('keyup'); return peak;
   }
+  const short=await height(60),long=await height(300);
+  assert(short>0 && long>short*1.8, `jump heights ${short}/${long}`);
+  el('retry').click(); el('pause').click(); const distance=el('scene').dataset.distance;
+  await wait(200); assert(el('scene').dataset.distance===distance,'pause advanced game');
+  el('begin').click();
+  for(let i=0;i<40 && el('scene').dataset.distance===distance;i++) await wait(50);
+  assert(el('scene').dataset.distance!==distance,'resume failed');
+  el('toy').click(); assert(el('toy').getAttribute('aria-pressed')==='true','3D failed');
+  el('cartoon').click(); assert(el('cartoon').getAttribute('aria-pressed')==='true','cartoon failed');
+  el('retry').click(); assert(el('scene').dataset.distance==='0','retry failed');
+  window.dispatchEvent(new Event('blur')); assert(el('scene').dataset.paused==='true','blur did not pause');
+  assert(document.documentElement.scrollWidth<=innerWidth,'horizontal overflow');
+  return {short,long,pause:'PASS',modes:'PASS',retry:'PASS',background:'PASS'};
 }
-function pointer(type: string, x: number, y: number) {
-  node("scene").dispatchEvent(
-    new PointerEvent(type, {
-      pointerId: 7,
-      pointerType: "touch",
-      button: 0,
-      bubbles: true,
-      clientX: x,
-      clientY: y,
-    }),
-  );
-}
-export async function checkDrag() {
-  click("retry");
-  const rect = node("scene").getBoundingClientRect(),
-    x = rect.left + rect.width / 2,
-    y = rect.top + rect.height / 2;
-  const before = { ...node("scene").dataset };
-  pointer("pointerdown", x, y);
-  pointer("pointermove", x + 45, y - 30);
-  await delay(500);
-  pointer("pointerup", x + 45, y - 30);
-  const after = { ...node("scene").dataset };
-  assert(
-    before.x !== after.x || before.z !== after.z,
-    "drag did not move turtle",
-  );
-  await delay(200);
-  assert(
-    node("scene").dataset.x === after.x && node("scene").dataset.z === after.z,
-    "release did not stop turtle",
-  );
-  click("pause");
-  const time = node("scene").dataset.remaining;
-  await delay(400);
-  assert(node("scene").dataset.remaining === time, "timer ran while paused");
-  click("resume");
-  return "drag → release → pause/resume: PASS";
-}
-export async function checkRound(mode: "cartoon" | "toy") {
-  click(mode);
-  await until(() => node(mode).getAttribute("aria-pressed") === "true");
-  click("retry");
-  const rect = node("scene").getBoundingClientRect(),
-    ax = rect.left + rect.width / 2,
-    ay = rect.top + rect.height / 2;
-  pointer("pointerdown", ax, ay);
-  const points: number[][] = [
-    [0, 4],
-    [-5, 4],
-    [5, 4],
-    [5, 2],
-    [-5, 2],
-    [-5, 0],
-    [5, 0],
-    [5, -2],
-    [-5, -2],
-    [-5, -4],
-    [5, -4],
-    [5, -5.6],
-    [-5, -5.6],
-    [0, 0],
-    [3.5, 2.6],
-    [-3.5, 2.6],
-  ];
-  let index = 0,
-    lastTarget = performance.now(),
-    maxTier = 0;
-  await until(() => {
-    const state = node("scene").dataset;
-    maxTier = Math.max(maxTier, Number(state.tier));
-    if (state.status === "finished") return true;
-    const target = points[index % points.length],
-      dx = target[0] - Number(state.x),
-      dz = target[1] - Number(state.z);
-    if (Math.hypot(dx, dz) < 0.55 || performance.now() - lastTarget > 2200) {
-      index++;
-      lastTarget = performance.now();
-    }
-    const sx = (dx - dz) * 0.707,
-      sy = (dx + dz) * 0.485,
-      scale = 48 / Math.max(0.1, Math.hypot(sx, sy));
-    pointer("pointermove", ax + sx * scale, ay + sy * scale);
-    return false;
-  }, 45000);
-  pointer("pointerup", ax, ay);
-  await until(() => !node("overlay").hidden);
-  const score = Number(node("scene").dataset.score),
-    destroyed = Number(node("scene").dataset.destroyed);
-  assert(
-    score > 100 && destroyed >= 10,
-    `too little destruction: ${score}/${destroyed}`,
-  );
-  assert(maxTier >= 2, `growth too slow: tier ${maxTier}`);
-  assert(node("dialog").textContent?.includes("마트 정리"), "result missing");
-  const result = { mode, score, destroyed, maxTier };
-  click("again");
-  assert(node("scene").dataset.score === "0", "replay score not reset");
-  click("pause");
-  return result;
-}
-export async function checkLoadingPause() {
-  click("retry");
-  click("toy");
-  click("help");
-  await until(() => node("toy").getAttribute("aria-pressed") === "true");
-  const time = node("scene").dataset.remaining;
-  await delay(400);
-  assert(
-    node("scene").dataset.remaining === time,
-    "3D load resumed behind help",
-  );
-  click("begin");
-  click("pause");
-  return "3D load/help pause: PASS";
+export async function checkTurbo() {
+  el('retry').click();
+  const deadline=performance.now()+5000;
+  while(!el('scene').classList.contains('turbo') && performance.now()<deadline) await wait(25);
+  assert(el('scene').classList.contains('turbo'),'opening coin chain did not activate turbo');
+  assert(el('coins').textContent?.includes('5'),'coin counter missing');
+  assert(!el('power').hidden && el('power').textContent?.includes('터보'),'turbo HUD missing');
+  el('toy').click();
+  assert(el('scene').classList.contains('turbo'),'mode switch lost turbo');
+  el('pause').click();const power=el('power').textContent;
+  await wait(250);assert(el('power').textContent===power,'turbo timer ran while paused');
+  return {coins:el('coins').textContent,turbo:'PASS',mode:'PASS',pause:'PASS'};
 }

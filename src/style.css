@@ -676,3 +676,15 @@ footer > span {
   .scene { height: calc(100dvh - 110px); }
   .overlay { inset: 0; }
 }
+
+/* Runner overlays are positioned inside the scene, below the score bar. */
+.scene .overlay { inset: 0; }
+.power { position: absolute; top: 48px; left: 18px; z-index: 2; border-radius: 20px; background: #fff2bb; color: #78502b; padding: 7px 12px; font-size: 12px; font-weight: 800; pointer-events: none; }
+.scene { touch-action: none; }
+.loot { position:absolute; left:18px; right:70px; top:42px; display:flex; gap:12px; align-items:center; color:#98702e; font-size:12px; font-weight:800; pointer-events:none; }
+#pace { color:#608175; font-variant-numeric:tabular-nums; }
+.scene .power { top:70px; font-size:11px; }
+.notice { position:absolute; top:115px; left:50%; transform:translateX(-50%) rotate(-3deg); padding:7px 14px; border-radius:14px; background:#fff5ce; color:#955e3e; font-family:"Gaegu",sans-serif; font-weight:700; font-size:23px; white-space:nowrap; pointer-events:none; }
+.scene.turbo { box-shadow:inset 0 0 40px #f2c65d66; }
+.scene.turbo::after { content:""; position:absolute; inset:0; pointer-events:none; border:3px solid #efc87699; box-shadow:inset 0 0 30px #f2c65d22; }
+@media(prefers-reduced-motion:reduce){.scene.turbo::after{display:none}}

@@ -2,7 +2,7 @@ import bodyUrl from "./turtle-body.png";
 import crawlUrl from "./turtle-crawl.png";
 import { drawProp } from "./shopProps";
 import { motion, gaitNames } from "./motion";
-import type { Game } from "./game";
+import { isFlying, type Game } from "./game";
 
 export class Cartoon {
   canvas = document.createElement("canvas");
@@ -25,11 +25,27 @@ export class Cartoon {
     const c=this.c,w=this.w,h=this.h,ground=h*.76,scale=Math.min(w / (w < 540 ? 760 : 900), h / 400), turtleX=w*.18;
     c.clearRect(0,0,w,h); c.fillStyle="#e8eddc"; c.fillRect(0,0,w,h);
     c.fillStyle="#d9e2c9"; for(let i=0;i<5;i++){const x=((i*230-g.distance*.18)%(w+120)+(w+120))%(w+120)-50;c.beginPath();c.arc(x,h*.48,65,0,Math.PI*2);c.fill();}
+    c.save();c.strokeStyle=g.turbo>0?"#d6a648":"#b5c6a4";c.globalAlpha=g.turbo>0?.55:.22;
+    for(let i=0;i<12;i++){
+      const x=((i*107-g.distance*(1.1+i%3*.2))%(w+180)+(w+180))%(w+180)-90;
+      const y=55+(i*43)%(ground-65);c.lineWidth=i%3+1;c.beginPath();c.moveTo(x,y);c.lineTo(x+25+g.speed*.07+(g.turbo>0?55:0),y);c.stroke();
+    }c.restore();
     c.fillStyle="#d4b978";c.fillRect(0,ground,w,h-ground);c.fillStyle="#b39c63";c.fillRect(0,ground,w,5);
-    for (const item of g.obstacles) {
-      c.save(); c.translate(turtleX + item.x * scale, ground); c.scale(scale, scale);
-      drawProp(c, item.type);
-      if (item.type === "hole") { c.fillStyle="#796352"; c.fillRect(0,80,item.width,Math.max(0,(h-ground)/scale-80)); }
+    // Fast foreground marks and slower distant bushes give depth without camera shake.
+    c.fillStyle="#bd9f61";
+    for(let i=0;i<18;i++){const x=((i*85-g.distance*scale)%(w+85)+(w+85))%(w+85);c.fillRect(x,ground+25+(i%3)*17,28,3);}
+    for (const item of [...g.obstacles].sort((a,b)=>Number(b.type==='hole')-Number(a.type==='hole'))) {
+      if(item.hit) continue;
+      const x=turtleX+item.x*scale;
+      if(x>w+100 || x+item.width*scale<0)continue;
+      c.save(); c.translate(x, ground-item.y*scale); c.scale(scale,scale);
+      if(item.type==='cactus') {
+        for(let offset=0;offset<item.width;offset+=42){c.save();c.translate(offset,0);c.scale(Math.min(42,item.width-offset)/48,1);drawProp(c,item.type);c.restore();}
+      } else {
+        if(item.type!=="hole" && item.type!=="platform")c.scale(item.width/48,1);
+        drawProp(c,item.type,false,item.width);
+        if(item.type==='hole'){c.fillStyle="#796352";c.fillRect(0,80,item.width,Math.max(0,(h-ground)/scale-80));}
+      }
       c.restore();
     }
     const m = motion(g.speed, g.distance);
@@ -42,6 +58,10 @@ export class Cartoon {
     c.save(); c.translate(turtleX,ground); c.scale(scale,scale);
     c.globalAlpha=.15; oval(0,4,38/(1+g.y/200),6,"#35483d"); c.globalAlpha=1;
     c.translate(0,-g.y);
+    if(isFlying(g) || g.turbo>0) {
+      c.save(); c.globalAlpha=.23; oval(0,-38,66,53,"#ffe57b");c.restore();
+      for(let i=0;i<5;i++){c.strokeStyle=["#f29986","#edbf67","#a6ce83","#8cc7d0","#b8a4da"][i];c.lineWidth=6;c.beginPath();c.moveTo(-30,-15-i*8);c.lineTo(-130-Math.sin(g.time*15+i)*12,-15-i*8);c.stroke();}
+    }
     for(let i=0;i<6;i++) {
       const d=(g.distance+i*17)%100;
       c.globalAlpha=m.intensity*(1-d/100)*.4;
@@ -108,6 +128,6 @@ export class Cartoon {
       }
     }
     c.restore();
-    c.fillStyle="#35483d"; c.font="700 14px sans-serif"; c.fillText(gaitNames[m.gait],18,32);
+    c.fillStyle="#35483d"; c.font="700 14px sans-serif"; c.fillText(g.turbo>0 && !isFlying(g) ? "터보!!" : isFlying(g) ? (g.landing ? "안전하게 착륙 중" : "슈퍼 거북이!") : gaitNames[m.gait],18,32);
   }
 }
