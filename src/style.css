@@ -652,3 +652,27 @@ footer > span {
   outline: 2px solid #8caf75;
   outline-offset: -2px;
 }
+.scene { height: clamp(300px, 52dvh, 500px); cursor: pointer; touch-action: manipulation; background: #e8eddc; }
+.pause-btn { position:absolute; right:14px; top:14px; z-index:2; background:#fffdf3cc; }
+.lives { color:#d66d5d; font-size:20px; letter-spacing:3px; }
+.runner-tip { display:flex; align-items:center; gap:12px; margin:16px 20px 18px; padding:13px 17px; border-radius:12px; background:#edf0e1; font-size:12px; }
+.runner-tip b { display:grid; place-items:center; width:34px; height:34px; border-radius:50%; background:#3e604a; color:#fffdf1; }
+.overlay { background:#e8eddcbb; }
+@media(max-width:600px){ .scene{height:clamp(290px,52dvh,470px)} .runner-tip{margin:12px;padding:10px;font-size:10px} }
+
+@media (max-width: 600px), (pointer: coarse) {
+  .scene { touch-action: none; }
+  .icon-btn, .mode-switch button, .text-button { min-width: 44px; min-height: 44px; }
+  .game-shell {
+    padding-left: max(10px, env(safe-area-inset-left));
+    padding-right: max(10px, env(safe-area-inset-right));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .game-shell { padding-top: 4px; }
+  .topbar, .title-row, .runner-tip { display: none; }
+  .board-top { height: 50px; }
+  .scene { height: calc(100dvh - 110px); }
+  .overlay { inset: 0; }
+}
